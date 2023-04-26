@@ -570,7 +570,7 @@ class Sampler:
         msa_prev = None
         pair_prev = None
         state_prev = None
-
+        '''
         with torch.no_grad():
             msa_prev, pair_prev, px0, state_prev, alpha, logits, plddt = self.model(msa_masked,
                                 msa_full,
@@ -587,6 +587,22 @@ class Sampler:
                                 t=torch.tensor(t),
                                 return_infer=True,
                                 motif_mask=self.diffusion_mask.squeeze().to(self.device))
+        '''
+        msa_prev, pair_prev, px0, state_prev, alpha, logits, plddt = self.model(msa_masked,
+                            msa_full,
+                            seq_in,
+                            xt_in,
+                            idx_pdb,
+                            t1d=t1d,
+                            t2d=t2d,
+                            xyz_t=xyz_t,
+                            alpha_t=alpha_t,
+                            msa_prev = msa_prev,
+                            pair_prev = pair_prev,
+                            state_prev = state_prev,
+                            t=torch.tensor(t),
+                            return_infer=True,
+                            motif_mask=self.diffusion_mask.squeeze().to(self.device))
 
         # prediction of X0 
         _, px0  = self.allatom(torch.argmax(seq_in, dim=-1), px0, alpha)
@@ -661,6 +677,7 @@ class SelfConditioning(Sampler):
         ### Forward Pass ###
         ####################
 
+        '''
         with torch.no_grad():
             msa_prev, pair_prev, px0, state_prev, alpha, logits, plddt = self.model(msa_masked,
                                 msa_full,
@@ -680,6 +697,25 @@ class SelfConditioning(Sampler):
 
             if self.symmetry is not None and self.inf_conf.symmetric_self_cond:
                 px0 = self.symmetrise_prev_pred(px0=px0,seq_in=seq_in, alpha=alpha)[:,:,:3]
+        '''
+        msa_prev, pair_prev, px0, state_prev, alpha, logits, plddt = self.model(msa_masked,
+                            msa_full,
+                            seq_in,
+                            xt_in,
+                            idx_pdb,
+                            t1d=t1d,
+                            t2d=t2d,
+                            xyz_t=xyz_t,
+                            alpha_t=alpha_t,
+                            msa_prev = None,
+                            pair_prev = None,
+                            state_prev = None,
+                            t=torch.tensor(t),
+                            return_infer=True,
+                            motif_mask=self.diffusion_mask.squeeze().to(self.device))   
+
+        if self.symmetry is not None and self.inf_conf.symmetric_self_cond:
+            px0 = self.symmetrise_prev_pred(px0=px0,seq_in=seq_in, alpha=alpha)[:,:,:3]
 
         self.prev_pred = torch.clone(px0)
 
